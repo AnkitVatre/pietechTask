@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div>
+            <h2 class="bg-danger py-4 text-center text-white">Welcome to Test Application</h2>
+
+        </div>
+
+
+        <div class="container">
+            <div class="row pb-4">
+                <h2 class="col-3">User Data</h2>
+                <form class="d-flex col-3">
+                    <input class="form-control me-2 search" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success" onclick="searchData()" type="submit">Search</button>
+                </form>
+                <div class="dropdown col-3">
+                    <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenuButton1"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        Sort by Age
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                        <li><a class="dropdown-item" onclick="sortting('age|asc')" href="#">Ascending</a></li>
+                        <li><a class="dropdown-item" onclick="sortting('age|desc')" href="#">Descending</a></li>
+                        <li><a class="dropdown-item" onclick="sortting()" href="#">None</a></li>
+                    </ul>
+                </div>
+                <div class="col-3">
+                    <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#signUpModal">Sign up</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Age</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination">
+
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+<!--  -->
+<div class="modal fade" id="signUpModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form>
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" aria-describedby="emailHelp" required>
+                  </div>
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email address</label>
+                  <input type="email" class="form-control" id="email" aria-describedby="emailHelp" required>
+                </div>
+                <div class="mb-3">
+                  <label for="password class="form-label">Password</label>
+                  <input type="password" class="form-control" id="password" required>
+                </div>
+                <div class="mb-3 ">
+                    <label class="form-label" for="age">Age</label>
+                    <input type="number" class="form-control" id="age" aria-describedby="emailHelp" required>
+                </div>
+                <!-- <button type="submit" class="btn btn-primary">Submit</button> -->
+              </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="closeModal" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary"  onclick="userSignUp()">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+    <!--  -->
+    <script>
+        var sorting = ""
+        document.addEventListener("DOMContentLoaded", async () => {
+            await updateTable(0, "")
+        })
+        async function searchData() {
+            const filter = document.querySelector(".search").value
+            await updateTable(0, filter)
+        }
+
+        async function sortting(sort) {
+            sorting = sort
+            updateTable(0, "")
+        }
+
+        async function userSignUp(){
+            let name = document.getElementById("name").value
+            let email = document.getElementById("email").value
+            let password = document.getElementById("password").value
+            let age = document.getElementById("age").value
+            if(!name || !email || !password || !age){
+                alert("please provide all details")
+                return
+            }
+            let options = {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+                    name,email,password,age
+                })
+            }
+            const response = await fetch("http://localhost:4010/api/user/signup", options)
+            const result = response.json()
+            if(result.status){
+                document.getElementById("closeModal").click()
+                await updateTable(0, "")
+            }
+        }
+
+        async function updateTable(page, searchKey) {
+            const data = {
+                limit: 3,
+                page,
+                sorting,
+                searchKey
+            }
+            const options = {
+                method: "POST",
+                headers: {
+                    // the content type header value is usually auto-set
+                    // depending on the request body
+                    "Content-type": "application/json"
+                },
+                body: JSON.stringify(data)
+            }
+
+            const response = await fetch("http://localhost:4010/api/user/userlist", options)
+            const result = await response.json()
+            if (result.status) {
+                console.log(result)
+                document.querySelector("tbody").innerHTML = ""
+                result?.data?.searchData?.map((user, i) => {
+                    document.querySelector("tbody").innerHTML +=
+                        `
+                    <tr>
+                        <td>${i + 1}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.age}</td>
+                    </tr>
+                `
+                })
+                let pagination = document.querySelector(".pagination")
+                pagination.innerHTML = ""
+                if (result?.data?.page == 0) {
+                    pagination.innerHTML +=
+                        `
+                        <li class="page-item disabled"><a class="page-link " onClick="updateTable(${result?.data?.page - 1}, '')" href="#">Previous</a></li>
+                        `
+                }
+                else {
+                    pagination.innerHTML +=
+                        `
+                        <li class="page-item"><a class="page-link" onClick="updateTable(${result?.data?.page - 1}, '')" href="#">Previous</a></li>
+                        `
+                }
+                for (i = 0; i < result?.data?.totalPage; i++) {
+                    if (i == result.data.page) {
+                        pagination.innerHTML +=
+                            `
+                    <li class="page-item active"><a class="page-link" onClick="updateTable(${i}, '')" href="#">${i + 1}</a></li>
+                    `
+                    }
+                    else {
+                        pagination.innerHTML +=
+                            `
+                    <li class="page-item "><a class="page-link" onClick="updateTable(${i}, '')" href="#">${i + 1}</a></li>
+                    `
+                    }
+
+                }
+                if (result?.data?.page == result?.data?.totalPage - 1) {
+                    pagination.innerHTML +=
+                        `
+                        <li class="page-item disabled"><a class="page-link " onClick="updateTable(${result?.data?.page + 1}, '')" href="#">Next</a></li>
+                        `
+                }
+                else {
+                    pagination.innerHTML +=
+                        `
+                        <li class="page-item"><a class="page-link" onClick="updateTable(${result?.data?.page + 1}, '')" href="#">Next</a></li>
+                        `
+                }
+                // document.querySelector(".pagination").innerHTML +=
+                //     `
+                //         <li class="page-item "><a class="page-link" href="#">1</a></li>
+                //         <li class="page-item"><a class="page-link" href="#">2</a></li>
+                //         <li class="page-item"><a class="page-link" href="#">3</a></li>
+                //         <li class="page-item"><a class="page-link" onClick="updateTable(${result?.data?.page + 1}, '')" href="#">Next</a></li>
+                // `
+
+            }
+        } 
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
