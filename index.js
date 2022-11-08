@@ -18,6 +18,5 @@ app.listen(PORT, ()=> {
 
 require("./app/routes")(app)
 app.get("/", (req, res) => {
-    // res.sendfile(path.join(__dirname, 'public/html/index.html'))
-    res.send("welcome ankit")
+    res.sendFile(path.join(__dirname, 'public/html/index.html'))
 })
